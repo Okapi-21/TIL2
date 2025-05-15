@@ -1,6 +1,4 @@
-# rails 基礎 16
-
-turbo stream の基本アクション
+# turbo stream の基本アクション
 
 Append　（指定した要素の内部に新しいコンテンツを追加）
 
