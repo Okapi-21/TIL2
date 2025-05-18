@@ -159,13 +159,51 @@ gem 'ransack', '3.2.1'
 
 
 
+### パスワード再設定
+
+------
+
+### gem 'letter_opener_web'
+
+送信されるメールをwebブラウザで確認できるgem（https://github.com/fgrehm/letter_opener_web）
+
+```ruby
+group :development do
+  gem 'letter_opener_web', '~> 3.0'
+end
+```
+
+メール送信処理が行われると、メール内容がブラウザで表示され、実際にメールを送信されることなく内容を確認することができる。これにより、メールの内容やフォーマットを簡単に確認・修正することが可能となる。
+
+### gem 'config'
+
+Railsアプリケーションで設定管理を簡単に行うためのgem。環境ごとに異なる設定を一括管理することができる。
+
+（https://github.com/rubyconfig/config）
+
+```ruby
+gem 'config'
+```
+
+それぞれの環境で異なる設定を行いたい場合に、非常に有効。 config/setting/xxx.yml で環境ごとの設定を変更することができる。
+
+### Action 「Mailer」
+
+Railsでメールを送信するためのフレームワーク。
+
+メールのテンプレートや送信設定を簡単に行うことができ、HTML形式やテキスト形式のメールを送信することが可能
+
+ActionMailerを使用することで、ユーザー認証 や パスワードリセット、通知メールなど、様々なメール機能をアプリケーションに実装することができる。メールのビューは app/views/xxxx_mailer.rb に保存され、HTMLとテキストのテンプレートを作成する。
+
+
+
 ### 新しい gem を追加した際に必要なコード
 
 ```
 docker compose run web bundle install
 docker compose run web rails g xxxxx:install
 docker compose restart
-docker compose exec web bin/de
+docker compose exec web bin/dev
 ```
 
 
