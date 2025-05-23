@@ -41,7 +41,9 @@ docker compose exec web bundle exec rspec spec/models/task_spec.rb
    1. it 以下において、検証メソッドを使って、「成功」「失敗」の詳細を記す
 4. factory botで作成したデータをテストコードに反映する
 
-### model spec
+
+
+## model spec
 
 ------
 
@@ -158,13 +160,127 @@ end
 
   データベースに「保存せずにオブジェクトを作成する」ためのメソッド。buildメソッドを使用すると、作成したオブジェクトはデータベースに保存されず、一時的なオブジェクトとしてのみ存在する。DBにデータを保存する必要がない場合や関連オブジェクトの作成など、一時的なオブジェクト作成のために作られる。createと同様にデータの上書きが可能。
   
-  
 - Factorybotの導入のために[rails_helper.rb ]へ以下を記入
   ```
   config.include FactoryBot::Syntax::Methods
   ```
 
-  
+
+
+
+## capybara
+
+------
+
+RSpecで統合テストを実行するためのDSL（ドメイン固有言語）のこと。主にWebアプリケーションのテストをシミュレートするために使用される。Capybaraはブラウザとのやり取りをシミュレートすることで、ユーザーが実際に行うであろう操作（クリック、フォーム入力、ページ遷移など）をテストコード内で再現できる。
+
+#### capybaraのメソッド
+
+------
+
+##### visit （指定のURLやパスにアクセスする）
+
+```
+# /usersに対してアクセスする
+visit '/users'
+
+# Railsで定義されているroot_pathに対してアクセスする
+visit root_path
+```
+
+##### click_on, click_link, click_button（対象のボタンをクリックする）
+
+```
+# 「ログイン」をクリックする
+click_on 'ログイン'
+```
+
+##### fill_in（フォームの入力フィールドに値を入力する）
+
+```
+# 「ユーザー名」に対して、'らんてくん'を入力する
+fill_in 'ユーザー名', with: 'らんてくん'
+```
+
+##### find（CSSセレクタで指定した要素を探す）
+
+```
+# classが「title」の要素を探す
+find('.title')
+```
+
+##### select(セレクトボックスからオプションを選択する)
+
+```
+# 「言語」のセレクトボックスから'Ruby'を選択する
+select 'Ruby', from: '言語'
+```
+
+##### have_content（指定した要素内にテキストが存在するか確認する）
+
+```
+# page全体のなかに'ようこそ'の文字列があるか確認する
+expect(page).to have_content('ようこそ')
+```
+
+
+
+#### 処理の共通化
+
+------
+
+##### 変数宣言
+
+##### let（テストケース内で使用する変数を定義する）
+
+```
+let(:user) { User.create(name: 'runteq', email: 'runteq@example.com') }
+it 'userインスタンスが有効であること' do
+  # ↓ここではじめて参照されるのでuserの変数が作られる
+  expect(user).to be_valid
+end
+```
+
+＊ let に似たものに let ! があるが、let ! は即座に変数を評価し、宣言が行われたのと同時に初期化する。 
+
+##### 事前処理
+
+##### before（各テストケースの実行前に共通のセットアップコードを実行する）
+
+```
+let(:user) { User.create(name: 'runteq', email: 'runteq@example.com') }
+# ↓テスト前に処理を行う
+before { login(user) }
+```
+
+##### 処理のmodule化（テストで行う処理のモジュール化）
+
+```
+module LoginMacros
+  def login(user)
+    visit login_path
+    fill_in 'メールアドレス', with: user.email
+    fill_in 'パスワード', with: user.password
+    click_on 'ログイン'
+  end
+end
+```
+
+＊以下のように include することも可能
+
+```
+RSpec.describe 'hogehoge', type: :system do
+  include LoginMacros
+
+  it 'ログインした後に...' do
+    user = User.create(email: 'runteq@example.com', password: 'password')
+    login(user)
+    # ログイン後のテストを書く
+  end
+end
+```
+
+
 
 ### 個人的なポイント
 
