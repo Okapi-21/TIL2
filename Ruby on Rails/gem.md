@@ -4,6 +4,44 @@
 
 ------
 
+### ユーザー登録
+
+------
+
+### gem 'sorcery'
+
+ Railsアプリケーションにおける認証システムの実装を支援するライブラリ。ログイン、ログアウト、セッション管理などの基本的な認証機能を簡単に追加することが可能になる。
+
+```ruby
+gem 'sorcery', '0.16.3'
+```
+
+導入後に必要なコマンド（sorceyの初期設定やDB管理に必要なマイグレーションファイルを生成するためのもの）
+
+```
+docker compose run web rails g sorcery:install
+```
+
+マイグレーションファイル の記述も以下に記述しておく
+
+```ruby
+class SorceryCore < ActiveRecord::Migration[7.0]
+  def change
+    create_table :users do |t|
+      t.string :email,            null: false, index: { unique: true }
+      t.string :crypted_password
+      t.string :salt
+      t.string :first_name,       null: false
+      t.string :last_name,        null: false
+
+      t.timestamps                null: false
+    end
+  end
+end
+```
+
+
+
 ### 画像
 
 ------
