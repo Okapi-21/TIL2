@@ -296,13 +296,13 @@ end
 
     記述の違い
 
-    | 項目           | model specの例                                               | system specの例                                              |
-    | -------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-    | テスト対象     | モデル（User, Taskなど）                                     | 画面・ユーザー操作全体                                       |
-    | データ作成方法 | [build(:user)](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html), [create(:user)](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html) | 必要なら[create(:user)](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html)で事前にデータ作成 |
-    | 主なメソッド   | [expect(user).to be_valid](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html) | [visit](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html), [fill_in](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html), [click_button](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html), [expect(page).to have_content](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html) |
-    | 画面操作       | しない                                                       | する                                                         |
-    | 目的           | バリデーションやロジックの正しさ                             | ユーザー体験・画面遷移・表示内容の正しさ                     |
+    | 項目           | model specの例                   | system specの例                                              |
+    | -------------- | -------------------------------- | ------------------------------------------------------------ |
+    | テスト対象     | モデル（User, Taskなど）         | 画面・ユーザー操作全体                                       |
+    | データ作成方法 | [build(:user)] [create(:user)]   | 必要なら[create(:user)]で事前にデータ作成                    |
+    | 主なメソッド   | [expect(user).to be_valid]       | [visit], [fill_in], [click_button], [expect(page).to have_content] |
+    | 画面操作       | しない                           | する                                                         |
+    | 目的           | バリデーションやロジックの正しさ | ユーザー体験・画面遷移・表示内容の正しさ                     |
 
     model spec も system spec もどちらも役割が異なるので両方必要。
     ＊どちらか一方だけだと、見逃してしまうバグが増える。
