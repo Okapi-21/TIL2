@@ -287,12 +287,41 @@ end
 ------
 
 1. テストコードはFactorybotの定義から始める
-   　Factorybotを使ったテストを行う場合は、必ずFactorybotの定義が必要になるので、テストコードを書く前にFactorybotの定義から書き始める。でないと、テストコードで要らぬ設定が増えて、冗長化してしまう。テストをしていて、新しいモデル定義が必要になった時は、その都度、定義を更新していく。また、buildや createを使いたい場合は、FactoryBotのファクトリー定義が必須らしい...
+    Factorybotを使ったテストを行う場合は、必ずFactorybotの定義が必要になるので、テストコードを書く前にFactorybotの定義から書き始める。でないと、テストコードで要らぬ設定が増えて、冗長化してしまう。テストをしていて、新しいモデル定義が必要になった時は、その都度、定義を更新していく。また、buildや createを使いたい場合は、FactoryBotのファクトリー定義が必須らしい...
+
 2. テストで用いるオブジェクト名はそのテスト内容に沿ったものにする
-   　例えば、titleのないtaskは「task_without_status」というふうに定義する。一目でどんなテストが弾かれたのかがわかるように。
-3. 
+    例えば、titleのないtaskは「task_without_status」というふうに定義する。一目でどんなテストが弾かれたのかがわかるように。
 
+3. capybaraが model のテストと異なるのは、 model が直接オブジェクトの値を指定してテストを行うのに対して、capybara(system)はユーザの画面操作を再現しながらテストを行うという点。そのため、systemはmodel と比べるとテストコードが長くなりがち。
 
+    記述の違い
 
+    | 項目           | model specの例                                               | system specの例                                              |
+    | -------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+    | テスト対象     | モデル（User, Taskなど）                                     | 画面・ユーザー操作全体                                       |
+    | データ作成方法 | [build(:user)](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html), [create(:user)](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html) | 必要なら[create(:user)](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html)で事前にデータ作成 |
+    | 主なメソッド   | [expect(user).to be_valid](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html) | [visit](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html), [fill_in](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html), [click_button](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html), [expect(page).to have_content](vscode-file://vscode-app/private/var/folders/1h/n2dkl4ps4qxc672sdvh0bqjw0000gn/T/AppTranslocation/D7CB7D0C-1A4A-4E34-97D2-1FAC38C1BA74/d/Visual Studio Code 3.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html) |
+    | 画面操作       | しない                                                       | する                                                         |
+    | 目的           | バリデーションやロジックの正しさ                             | ユーザー体験・画面遷移・表示内容の正しさ                     |
 
+    model spec も system spec もどちらも役割が異なるので両方必要。
+    ＊どちらか一方だけだと、見逃してしまうバグが増える。
 
+4. system specを書くときのコツ
+
+    1. ユーザー目線でストーリーを意識する
+       実際のユーザーがどう操作するかをイメージして、テストの流れを組み立てる。
+    2. テストデータはFactoryBotで用意する
+       create(:user) や create(:task) などで、必要なデータを事前に用意する。
+    3. 画面の要素はできるだけラベルやidで指定する
+       fill_in 'Email', with: ... のように、ラベル名やidでフォームを指定するとテストが壊れにくい。
+    4. 期待する画面の変化を具体的に書く
+       expect(page).to have_content ... で、ユーザーが見るべきメッセージや内容をしっかり確認する。
+       ページ遷移も expect(current_path).to eq ... でチェックする。
+    5. beforeやletを活用して、重複を減らす
+       ログイン処理や共通のデータ作成は、beforeやletでまとめておくとテストがスッキリする。
+    6. テストケースは「正常系」と「異常系」両方書く
+       正しく動く場合（正常系）だけでなく、失敗する場合（異常系）もテストする。
+       例：未入力、重複、権限がない場合など。
+    7. テストが失敗したときは、実際の画面やHTMLを確認する
+       テストが通らないときは、save_and_open_page（capybaraの機能）で画面を確認すると原因が分かりやすい。
