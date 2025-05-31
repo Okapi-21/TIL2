@@ -2,6 +2,27 @@
 
 ------
 
+### 配列
+
+------
+
+- 配列.shift 
+  配列.shift は、配列の先頭の要素を取得し、削除するメソッドのこと。
+
+  ```ruby
+  a = [1, 2, 3]
+  a.shift # => 1が返る
+  a = [2, 3]
+  ```
+
+  
+
+  
+
+### 条件分岐
+
+------
+
 ・fizz buzz!
 
 自己回答
@@ -28,7 +49,7 @@ chapter02_01(15)
 模範解答
 
 ```ruby
-ef chapter02_01(number)
+def chapter02_01(number)
   number.times do |num|
     n = num + 1
     if n % 3 == 0 && n % 5 == 0

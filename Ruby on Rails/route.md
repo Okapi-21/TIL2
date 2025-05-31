@@ -2,6 +2,16 @@
 
 ------
 
+#### ルート状況の確認
+
+------
+
+URLからのweb上で確認できる http://localhost:3000/rails/info/routes
+
+
+
+
+
 #### ログイン・ログアウト
 
 ------
@@ -28,6 +38,7 @@ resources :hoge, only: %i[new create]
 - 「only指定」について
   - onlyオプションを使用　→  resources メソッドで生成されるルートの中から特定のアクションだけを選択して生成
   - resources :user, only: [:index] と指定　→  ユーザー一覧のルートのみを生成し、その他のアクションのルートは除外
+- 「ログイン・ログアウト」などのパスは resources で生成することができないので、手動で設定する必要があるよ
 
 #### 単数形リソース（resource）
 
