@@ -10,8 +10,6 @@ URLからのweb上で確認できる http://localhost:3000/rails/info/routes
 
 
 
-
-
 #### ログイン・ログアウト
 
 ------
@@ -64,9 +62,3 @@ resource :hoge
 | hoge_path      | DELETE    | /hoge      | hoges#destroy             |
 
 
-
-#### ルート確認
-
-------
-
-http://localhost:3000/rails/info/routes にアクセスすることで現在のルートを確認することができる。
