@@ -46,3 +46,32 @@ https://tailwindcss.com/docs/display
 
 https://tailwindcss.com/docs/width
 ![img](https://popshub.s3.amazonaws.com/uploads/ckeditor/pictures/15887/content_image-1695103395179.jpg)
+
+
+
+#### 画面いっぱいに表示したいとき（フッターが上に来すぎてしまう）
+
+------
+
+1. min-h-screen
+   TailwindのCSSクラス min-h-screen を一番外側のdivタグにつけて、「最低でも画面の高さ」まで要素を広げる
+
+2. flex flex-col
+   flex ： flex ボックスというCSSレイアウトの設定方法の指定
+   flex-col：縦方向に要素を並べる指定
+
+   ＊これも一番外側のdivタグにつけて画面表示のルールを作る
+
+3. flex-1
+   `flex-1`は「余ったスペースを全部使って伸びる」指定
+   例えば、`flex flex-col`の親の中で、`flex-1`を付けた子要素は**残りの高さを全部使って広がる**。
+   その結果、フッターが常に一番下に来て、下の余白が自然に埋まる
+
+
+
+#### Responsive
+
+------
+
+https://skillhub.jp/courses/261/lessons/2083
+

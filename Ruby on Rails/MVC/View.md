@@ -41,3 +41,29 @@ HTMLのアンカータグ（aタグ）を生成を行う。このヘルパーを
 ```
 
 第一引数として、リンクが表示される名前を、第二引数として、パスを指定する事ができる（rails により指定されたものでも可能）。また、第二引数にはHTTPのメソッドも追加することもできる。
+
+
+
+#### Xへのシェア機能
+
+------
+
+Xへのシェア機能は「ツイートするボタン」を設置し、クリック時にXの投稿画面を開くことによって簡単に実装することができる。
+
+```ruby
+<div class="mt-6">
+    <% tweet_text = "#{@xxxxx}\n#{@xxxxx}\n#アプリ名称" %>
+    <%= link_to "Xでシェアする", "https://twitter.com/intent/tweet?text=#{ERB::Util.url_encode(tweet_text)}", target: "_blank", rel: "noopener", class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" %>
+  </div>
+```
+
+1. 診断系アプリの場合、tweet_textへインスタンス変数を含めテキストを代入することで診断結果を示すことができる。
+2. ボタン生成
+   1. `ERB::Util.url_encode`で日本語や改行をURLエンコードしている。
+      ＊URLエンコードとは：URLの中で使うことができない文字や日本語・記号などを、英数字の特別な形式に変換すること。
+   2. `target: "_blank"`で新しいタブで開く。
+   3. `rel: "noopener"`はセキュリティ対策。
+   4. `class: ...`はボタンの見た目を整えるためのTailwind CSS例（変更OK）。
+
+
+
