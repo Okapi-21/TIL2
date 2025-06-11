@@ -209,3 +209,53 @@ end
 - `sub` : 最初にヒットした部分だけ置換
 - `gsub` : ヒットした全部を置換
 - `match` : 詳しいマッチ結果を得る
+
+
+
+### 構造体・クラス
+
+------
+
+
+
+```ruby
+# 社員クラスの定義
+class Employee
+ #インスタンス変数を作成するための記述
+  def initialize(number, name)
+    @number = number
+    @name = name
+  end
+
+  # メンバメソッド
+  def getnum
+    @number
+  end
+
+  def getname
+    @name
+  end
+end
+
+# 社員のリストを保存する配列
+employees = []
+
+# コマンド受付
+
+while line = gets #コマンドが入力されている限りはtrue
+  cmd = line.chomp.split(" ") #１行で入力されているコマンドを空白区切りの配列とみなして変数 cmd に格納
+  #cmdの先頭の要素によって場合分けを行う。
+  if cmd[0] == "make"　#makeの場合
+    number = cmd[1].to_i　#二つ目の要素を整数型に変更して、number変数に代入
+    name = cmd[2]　#三つ目の要素をname変数に代入
+    employees << Employee.new(number, name)　#Employeeにより(number, name)の要素を持つ構造体にして、配列employeesに代入する
+  elsif cmd[0] == "getnum"　#getnumの場合
+    n = cmd[1].to_i　#二つ目の要素を整数型に変更して、n変数に代入
+    puts employees[n - 1].getnum #makeにより生成したインスタンス変数はemployeesに格納されているため、getnumを用いて出力
+  elsif cmd[0] == "getname"　#getnameの場合
+    n = cmd[1].to_i　#二つ目の要素を整数型に変更して、n変数に代入
+    puts employees[n - 1].getname #makeにより生成したインスタンス変数はemployeesに格納されているため、getnameを用いて出力
+  end
+end
+```
+
