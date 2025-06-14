@@ -216,7 +216,7 @@ end
 
 ------
 
-
+クラスを活用しているコードの解釈
 
 ```ruby
 # 社員クラスの定義
@@ -257,5 +257,166 @@ while line = gets #コマンドが入力されている限りはtrue
     puts employees[n - 1].getname #makeにより生成したインスタンス変数はemployeesに格納されているため、getnameを用いて出力
   end
 end
+```
+
+#### 継承
+
+paiza問題（https://paiza.jp/works/mondai/class_primer/class_primer__inheritance）
+
+```ruby
+class Customer
+    def initialize(age)
+        @age = age 
+        @fee = 0
+        @alcohol_ordered = false 
+    end 
+    
+    def softdrink(fee)
+        @fee += fee 
+    end
+    
+    def food(fee)
+        @fee += fee 
+    end
+    
+    def alcohol(fee) 
+
+    end 
+    
+    def total
+        @fee 
+    end 
+end
+
+class AdultCustomer < Customer 
+    def alcohol(fee) 
+        @fee += fee 
+        @alcohol_ordered = true 
+    end 
+    
+    def food(fee)
+        if @alcohol_ordered
+            @fee += [fee - 200, 0].max
+        else 
+            @fee += fee 
+        end
+    end
+end 
+        
+num, orders = gets.split(" ").map(&:to_i) 
+
+customers = []
+
+num.times do 
+    age = gets.to_i 
+    if age >= 20 
+        customers << AdultCustomer.new(age)
+    else 
+        customers << Customer.new(age)
+    end 
+end 
+
+
+orders.times do 
+    order = gets.split(" ")
+    customer_num = order[0].to_i 
+    order_content = order[1]
+    order_fee = order[2].to_i
+    if order_content == "food" 
+        customers[customer_num -1].food(order_fee)
+    elsif order_content =="softdrink"
+        customers[customer_num -1].softdrink(order_fee)
+    elsif order_content =="alcohol"
+        customers[customer_num -1].alcohol(order_fee)
+    end 
+end
+
+(0...num).each do |i| 
+    puts customers[i].total 
+end 
+    
+```
+
+
+
+#### 静的メンバ
+
+```ruby
+class Customer 
+    def initialize(age)
+        @age = age 
+        @fee = 0 
+        @order_alcohol = false 
+    end 
+    
+    def food(fee) 
+        @fee += fee 
+    end 
+    
+    def softdrink(fee) 
+        @fee += fee 
+    end 
+    
+    def alcohol 
+        
+    end 
+    
+    def total 
+        @fee 
+    end 
+end 
+
+class AdultCustomer < Customer 
+    def alcohol(fee)
+        @fee += fee
+        @order_alcohol = true 
+    end 
+    
+    def food(fee)
+        if @order_alcohol 
+            @fee += fee -200
+        else 
+            @fee += fee 
+        end 
+    end
+end 
+
+num, orders = gets.split(" ").map(&:to_i)
+customers = []
+leaved_customer = 0
+
+num.times do
+    age = gets.to_i 
+    if age >= 20 
+        customers << AdultCustomer.new(age) 
+    else 
+        customers << Customer.new(age) 
+    end 
+end
+
+
+orders.times do 
+    order = gets.split(" ")
+    order_num = order[0].to_i - 1
+    order_content = order[1]
+    next if customers[order_num].nil?
+      case order_content
+      when "softdrink"
+        customers[order_num].softdrink(order[2].to_i)
+      when "food"
+        customers[order_num].food(order[2].to_i)
+      when "alcohol"
+        customers[order_num].alcohol(order[2].to_i)
+      when "0"
+        customers[order_num].alcohol(500)
+      when "A"
+        puts customers[order_num].total
+        leaved_customer += 1
+        customers[order_num] = nil
+    end
+end
+
+puts leaved_customer
+   
 ```
 
