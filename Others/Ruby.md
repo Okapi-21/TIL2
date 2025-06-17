@@ -2,7 +2,7 @@
 
 ------
 
-### 配列
+### 配列・ハッシュ
 
 ------
 
@@ -15,6 +15,15 @@
   a = [2, 3]
   ```
 
+- 配列.delete
+  **指定した値と等しい全ての要素を配列から削除**
+
+  ```ruby
+  a = [10, 20, 30, 20, 40]
+  a.delete(20) # => 20（配列は [10, 30, 40] になる、2つとも消える）
+  a.delete(99) # => nil（配列は変わらない）
+  ```
+
 - 配列.join( )
   配列.join( )は、配列の要素を一つの文字列として出力するためのメソッド。繋げる時の「区切り文字」についても、配列.join("x")のように記述することで指定することができる。
 
@@ -24,7 +33,57 @@
   puts a # => "1, 2, 3" 
   ```
 
+- 配列.include?(x)
+  そのオブジェクトが指定した要素を含んでいるかどうかを判定し、
+  含んでいれば`true`、含んでいなければ`false`を返します。
   
+  ```ruby
+  arr = [1, 2, 3, 4, 5]
+  p arr.include?(3)   #=> true
+  p arr.include?(9)   #=> false
+  ```
+  
+- 配列.index(x)
+  `arr.index(値)` は、**最初に値が現れるインデックス（0始まり）**を返します
+
+  ```ruby
+  arr = ["apple", "banana", "orange", "banana"]
+  p arr.index("banana")   # => 1
+  ```
+  
+- 
+  
+- 応用例
+  ```ruby
+  h.times { board << gets.chomp.chars }
+  ```
+  
+  - **h行分の迷路や盤面を1行ずつ入力として受け取り**
+  - **それぞれを「1文字ずつの配列」に変換**
+  - **`board`配列に入れていく**
+
+#### setについて
+
+　Set（セット）は、**「重複しない値の集まり」を表現するデータ構造**を示す。配列と似ているが、「同じ値」を入れたとしても結果が一つだけになるのが特徴としてある。また、配列とは異なり、要素の順序が存在しない。
+
+rubyでsetを使うには以下のように「 require "set" 」と記述する必要がある。
+```ruby
+require "set"
+
+s = Set.new
+s.add(1)
+s.add(2)
+s.add(1)  # 2回目の1は無視される
+
+p s   # => #<Set: {1, 2}>
+```
+
+要素の重複を防ぐので検索対象などはset化して使われることがある。
+
+| 役割         | データ型 | 理由                                        |
+| :----------- | :------- | :------------------------------------------ |
+| 検索対象(A)  | Set      | 含むかどうかの判定が高速＆重複がないから    |
+| 検索したい値 | Array    | 順番を保ったまま1つずつ調べて出力したいから |
 
 
 
@@ -209,6 +268,24 @@ end
 - `sub` : 最初にヒットした部分だけ置換
 - `gsub` : ヒットした全部を置換
 - `match` : 詳しいマッチ結果を得る
+
+
+
+#### 破壊的
+
+------
+
+「破壊的（はかいてき）」という言葉は、プログラミングの分野では**「元のデータやオブジェクトそのものを変更する」**という意味で使われる。
+
+- **破壊的処理**：メソッドや関数が「呼び出されたオブジェクト自体」を直接書き換えること。
+
+  　　　　　　これにより**元のデータが失われたり、変わったりする**。
+
+- **非破壊的処理**：元のデータはそのままで、新しいデータ（コピーや新しいインスタンス）を返す。
+
+　＊rubyはデフォルトで非破壊的処理を返すので、メソッドに「！」をつけて返すことで、破壊的処理を行うことができる。
+
+　＊破壊的処理を使うときは、**元のデータが変わって困らないか**よく考える必要がある
 
 
 
@@ -418,5 +495,57 @@ end
 
 puts leaved_customer
    
+```
+
+
+
+### 計算量の意識
+
+------
+
+計算量を考えない場合
+
+```ruby
+num, events = gets.split(" ").map(&:to_i)
+ary = []
+
+num.times do 
+    ary << gets.chomp
+end 
+
+events.times do 
+    comand, name = gets.split(" ")
+    if comand == "join"
+        ary << name 
+    elsif comand == "leave"
+        ary.delete(name)
+    elsif comand == "handshake"
+        puts ary.sort 
+    end 
+end 
+```
+
+計算量を考える場合（保留）
+
+```ruby
+require 'set' #Setの呼び出し
+
+n, k = gets.split.map(&:to_i)
+names = Set.new #配列ではなくSetで要素を管理
+n.times { names << gets.chomp }
+
+k.times do
+  event = gets.chomp
+  if event == "handshake"
+    names.to_a.sort.each { |name| puts name }　#集合.to_a（配列化）.sort（並び替え）.each { |name| puts name}
+  else
+    command, name = event.split
+    if command == "join"
+      names << name
+    else # leave
+      names.delete(name)
+    end
+  end
+end
 ```
 
