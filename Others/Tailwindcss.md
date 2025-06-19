@@ -75,3 +75,8 @@ https://tailwindcss.com/docs/width
 
 https://skillhub.jp/courses/261/lessons/2083
 
+rails ではデフォルトで ApplicationController に 「allow_browser versions: :modern」が設定されているので削除するとレスポンシブに
+（modern（モダン）なブラウザのみ許可する」という制限。一部のスマートフォンやタブレット、または古いブラウザでは406エラー（unsupported browser）が表示される原因になる）
+
+
+
