@@ -2,7 +2,31 @@
 
 ------
 
-### テーブル生成
+### マイグレーション
+
+------
+
+#### マイグレーションファイル適用
+
+```
+docker compose exec web rails db:migrate
+```
+
+#### 現在のマイグレーション確認
+
+```
+docker compose exec web rails db:migrate:status
+```
+
+#### 対象のマイグレーション down
+
+```
+docker compose exec web rails db:rollback STEP=1
+```
+
+
+
+### モデル生成
 
 ------
 
