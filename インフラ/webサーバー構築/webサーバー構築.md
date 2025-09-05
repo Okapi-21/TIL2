@@ -144,6 +144,8 @@ curl -O https://ja.wordpress.org/latest-ja.tar.gz
 tar zxvf latest-ja.tar.gz
 sudo mv wordpress/* /var/www/html/
 sudo chown -R apache:apache /var/www/html/ 
+#php-fpmはPHP実行のエンジンなので、apacheがphpを利用することができるようにphp-fpmを起動する
+sudo systemctl enable --now php-fpm
 ```
 
 #### 5. WordPress用データベースの作成
@@ -165,5 +167,29 @@ EXIT;
 #### 6. WordPressセットアップ画面にアクセス
 
 ブラウザで  
-`http://192.168.11.111/`  
+`http://ローカルIPアドレス/`  
 にアクセスすると、WordPressのインストール画面が表示されます。
+
+### WordPress初期設定手順
+
+1. インストール画面でデータベース情報を入力
+    - データベース名: `wordpress`
+    - ユーザー名: `wpuser`
+    - パスワード: （設定したパスワード）
+    - データベースのホスト名: `localhost`
+    - テーブル接頭辞: `wp_`（通常はそのままでOK）
+
+2. 「送信」→「インストールを実行」をクリック
+
+3. サイト情報と管理者情報の入力
+    - サイトタイトル
+    - 管理者ユーザー名
+    - 管理者パスワード
+    - 管理者メールアドレス
+
+4. インストール完了後、管理画面へログインしてサイトを運用開始！
+
+---
+
+これでWordPressのインストールは完了です。
+
