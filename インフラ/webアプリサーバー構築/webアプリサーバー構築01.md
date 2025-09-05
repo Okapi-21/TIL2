@@ -4,6 +4,34 @@
 
 
 
+
+
+### わからないポイント
+
+>4.17.2. 設定ファイルの編集
+
+> 『/var/www/html/clv/』ディレクトリーにある下記のファイルを編集してください。
+
+・ conf/confLdap.php
+
+ClassView の管理者サイトに AD/LDAP のユーザーでログインする場合は、サーバーの接続設定が必要です。
+
+「LDAP_SERVER」には AD もしくは LDAP サーバーの IP アドレス、「LDAP_RDN」にはユーザーのドメインを記述して
+
+ください。「dc=xxxxx」を本来のドメインに変更してください。認証に使用するユーザーのドメインが複数ある場合は、
+
+「'cn='.REPLACE_KEY.'….」の 1 行を複製し、ドメインを複数記載することでログイン可能となります。
+
+const LDAP_SERVER = 'AD/LDAPのIP アドレス';
+
+const LDAP_RDN = array(
+
+'cn='.REPLACE_KEY.',cn=users,dc=xxxxx,dc=xxxxx',
+
+);
+
+
+
 ------
 
 ### コメント
