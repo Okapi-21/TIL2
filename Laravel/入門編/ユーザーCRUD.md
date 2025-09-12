@@ -38,7 +38,7 @@ docker compose exec app php artisan make:model User -a
 マイグレーションの実行
 
 ```
-docker compose exec php artisan migrate
+docker compose exec app php artisan migrate
 ```
 
 （おまけ）
