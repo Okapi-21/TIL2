@@ -93,6 +93,12 @@ $ php artisan make:component Card
 
 
 
+#### ルート一覧表示
+
+```
+docker compose exec app php artisan route:list
+```
+
 
 
 
