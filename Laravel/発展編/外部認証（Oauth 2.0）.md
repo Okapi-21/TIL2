@@ -195,13 +195,12 @@ $user = User::updateOrCreate(
 
   - > [!IMPORTANT]
     >
-    > `updateOrCreate` メソッドが **自動で「存在チェック」→「update or create」までやってくれる** から
+    > `updateOrCreate` メソッドが **自動で「存在チェック」→「update or create」までやってくれる** から「if (あるか？) { 更新 } else { 新規作成 }」の分岐を書く必要がない
     >
-    > 「if (あるか？) { 更新 } else { 新規作成 }」の分岐を書く必要がない
-
-  ------
-
   
+------
+  
+
 
 5. ##### Web.route
 
