@@ -81,3 +81,6 @@ sudo systemctl reload caddy
 sudo journalctl -u caddy -f
 ```
 - 証明書が取れないときは、ここに "error" や "challenge" の失敗理由が出ます
+
+
+
