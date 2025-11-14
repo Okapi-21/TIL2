@@ -21,7 +21,7 @@ Laravelでの標準的な機能をそのまま利用することができるた�
 
 #### メソッドとアクション
 
-　**メソッド**：クラス内に記述される関数全般を示す。 function xxxx() {...} の形式で記述され、
+　**メソッド**：クラス内に記述される関数全般を示す。 function xxxx() {...} の代わりに使うことで形式で記述され、
 		　  public, protected, private といったアクセス修飾子をつけることができる。
 		　  通常、HTTPリクエストに対応する処理は public メソッドとして実装される。
 
@@ -51,7 +51,7 @@ $ php artisan make:component Card
 
 作成したコンポーネントはBladeテンプレート内で次のように呼び出す
 ```php
-<x-card :title="$title" :content="$content" />
+<x-card :title="$title" :content="$component" />
 ```
 
 コンポーネントに渡されたデータは、テンプレート内でローカル変数として利用することができる。
