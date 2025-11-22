@@ -22,3 +22,10 @@
   ```
 
   
+
+ダンプ（バックアップ）をとる時のコマンド
+
+```
+mysqldump -u ユーザー名 -p --databases DB名1 DB名2 --single-transation > ファイルパス or ファイル名
+```
+
