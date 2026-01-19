@@ -12,7 +12,8 @@ docker compose exec web rails g controller コントローラー名
 
 
 
-#### コントローラーメソッド
+1. #### コントローラーメソッド
+
 
 ------
 
