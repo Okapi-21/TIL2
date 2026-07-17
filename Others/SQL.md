@@ -18,6 +18,16 @@
   DROP DARABASE 既存のDB名;
   ```
   
+- 新しいテーブルを作成したい場合
+
+  ```bash
+  create table 新しいテーブル名(
+  	カラム名		データ型　　制約（PRIMARY KEY, NOT NULL, UNIQUE, etc..；,
+  );
+  ```
+  
+  
+  
 - DBのバックアップを取りたい時（postgresの場合）
 
   ```
