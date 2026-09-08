@@ -46,6 +46,31 @@
   pg_dump -U ユーザー名　-a データベース名　＞ バックアップ名.sql
   ```
   
+  （MySQLの場合）
+  
+  ```bash
+  mysqldump -u ユーザー名 -p データベース名 > バックアップ名.sql
+  ```
+  
+  （スキーマのみ）
+  
+  ```bash
+  mysqldump -u ユーザー名 -p --no-data データベース名 テーブル名 > schema_テーブル名.sql
+  ```
+  
+  （データのみ）
+  ```bash
+  mysqldump -u ユーザー名 -p --no-create-info データベース名 テーブル名 > data_テーブル名.sql
+  ```
+  
+- DBテーブルの文字数更新のためのコマンド
+  ```bash 
+  #mysql 
+  ALTER TABLE テーブル名 MODIFY カラム名 VARCHAR(新しい文字数);
+  ```
+  
+  
+
 - ダンプの適応
 
   コマンドライン
@@ -66,8 +91,6 @@
   #use databases コマンドを打ってから
   DROP TABLE IF EXISTS xxxxxx;
   ```
-
-- 
 
 ダンプ（バックアップ）をとる時のコマンド
 
