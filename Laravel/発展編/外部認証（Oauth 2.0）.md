@@ -36,9 +36,9 @@ composer require socialiteproviders/microsoft
 ```.env
 #クライアントID
 MICROSOFT_CLIENT_ID=xxxxxxxxxxxx
-#シークレットID
+#シークレットクライアント
 MICROSOFT_CLIENT_SECRET=xxxxxxxxxxxx
-#テナントID
+#テナントID(socialiteでは必須で設定する必要)
 MICROSOFT_TENANT_ID=xxxxxxxxxxxx
 #リダイレクトURI
 MICROSOFT_REDIRECT_URI=https://localhost:3000/login/認証サービス名/callback
@@ -80,10 +80,13 @@ Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->string('provider_id')->unique(); //provider_idを追加, PWとPW確認は使用しなくなったので消去
+  					$table->string('auht_provider, 20');
+            $table->string('provider_id'); //provider_idを追加, PWとPW確認は使用しなくなったので消去(breezeを使用している場合、テストが通らなくなるので、nullableとして残しておいても良い)
             $table->integer('user_auth')->default(1); 
             $table->rememberToken()->nullable();　// ログイン状態を記録しておくために必要
             $table->timestamps();
+  
+  					$table->unique(['auth_provider', 'provider_id']); // auth_providerとprovider_idの組み合わせがユニークになるように設定
 ```
 
 入力フォームでモデルの値を「一括代入」するので、モデルファイルにも変更を施す必要がある
@@ -93,6 +96,7 @@ Schema::create('users', function (Blueprint $table) {
         'name',
         'email',
         'provider_id', // 'password' を廃止して、'provider_id'を代わりに入れる
+      　'auth_provider' // google 認証も取り入れる場合は区別するためにこのカラムも必要になる
     ];
 ```
 
@@ -136,10 +140,29 @@ class MicrosoftController extends Controller // MicrosoftController クラス定
 
     public function handleProviderCallback()//Microsoft認証後、コールバック時に呼ばれる処理
     {
-        // Microsoftから返された情報（ユーザー名・メール・IDなど）を取得する
-        $microsoftUser = Socialite::driver('microsoft')->user();
-      //取得したMicrosoftユーザーIDをログ出力
-        \Log::info('Microsoft User ID:', ['id' => $microsoftUser->getId()]);
+      
+      if ($request->input('error') === 'access_denied') {
+            return redirect()
+                ->route('login')
+                ->withErrors(['oauth' => 'Microsoft認証がキャンセルされました。']);
+       }
+      
+      
+      try {
+            // Microsoftから返された情報（ユーザー名・メール・IDなど）を取得する
+            $microsoftUser = Socialite::driver('microsoft')->user();
+        } catch (InvalidStateException) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['oauth' => '認証情報を確認できませんでした。もう一度お試しください。']);
+        } catch (Exception $exception) {
+            report($exception);
+
+            return redirect()
+                ->route('login')
+                ->withErrors(['oauth' => 'Microsoft認証に失敗しました。もう一度お試しください。']);
+        }
+      	
 
         $id = $microsoftUser->getId();
         if (empty($id)) {
@@ -147,13 +170,13 @@ class MicrosoftController extends Controller // MicrosoftController クラス定
         }
 
         // 外部サービス（Microsoft等）から「ログインしてきたユーザーの情報（メールアドレス・名前・ID）」を受け取り、
-        // usersテーブルに「このメールアドレスの人が既にいるかを探す）
+        // usersテーブルに「このprovider_idの人が既にいるかを探す）
         // いなければ新規作成 / いれば「名前」と「provider_id」を最新情報で上書き更新
         $user = User::updateOrCreate(
-            ['email' => $microsoftUser->getEmail()],
+            ['auth_provider' => 'microsoft', 'provider_id' => $id],
             [
                 'name' => $microsoftUser->getName(),
-                'provider_id' => $id,
+                'email' => $microsoftUser->getEmail(),
             ]
         );
 
@@ -163,8 +186,6 @@ class MicrosoftController extends Controller // MicrosoftController クラス定
 }
 ```
 
-
-
 #### Point 【handleProviderCallbackのここが大切】
 
 ------
@@ -173,10 +194,10 @@ class MicrosoftController extends Controller // MicrosoftController クラス定
 
 ```php
 $user = User::updateOrCreate(
-            ['email' => $microsoftUser->getEmail()],
+            ['auth_provider' => 'microsoft', 'provider_id' => $id],
             [
                 'name' => $microsoftUser->getName(),
-                'provider_id' => $id,
+                'email' => $microsoftUser->getEmail(),
             ]
         );
 ```
@@ -199,7 +220,7 @@ $user = User::updateOrCreate(
     >
   
 ------
-  
+
 
 
 5. ##### Web.route
@@ -235,8 +256,15 @@ touch app/Providers/EventServiceProvider.php
 
 namespace App\Providers;
 
-use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+// 追記時にコメントアウト（Laravel13では仕様が変化している?）
+// use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+// use SocialiteProviders\Manager\SocialiteWasCalled;
+
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\ServiceProvider;
 use SocialiteProviders\Manager\SocialiteWasCalled;
+use SocialiteProviders\Microsoft\Provider;
+
 
 class EventServiceProvider extends ServiceProvider //Laravelのイベント機能を拡張・管理するための特別なクラス
 {
@@ -260,7 +288,15 @@ class EventServiceProvider extends ServiceProvider //Laravelのイベント機�
 
 
 
+##### 7. login.blade.php
 
+以下のようにログイン画面にマイクロソフトの認証窓口を追加
+
+```php+HTML
+ <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login.microsoft') }}">
+                {{ __('Microsoft') }}
+            </a>
+```
 
 
 
