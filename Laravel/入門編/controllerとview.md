@@ -160,6 +160,122 @@ Route::middleware('auth')->group(function () {
 
 
 
+#### Request（リクエスト）
+
+　Controllerのメソッドで引数として受け取る `$request` は、HTTPリクエスト全体を表すオブジェクトである。フォームから送信された値だけでなく、URL、HTTPメソッド、Cookie、IPアドレス、ログインユーザー情報など、あらゆる情報が含まれる。
+
+##### 2つのRequestの使い分け
+
+　Requestには **汎用クラス** と **カスタムクラス（FormRequest）** の2パターンがある。
+
+**パターン1: `Illuminate\Http\Request`（汎用）**
+
+特にバリデーション（入力チェック）が不要な場合に使う。
+
+```php
+use Illuminate\Http\Request;
+
+public function download(Request $request, string $token, int $fileId): StreamedResponse
+{
+    // $request->ip() でアクセス元のIPアドレスを取得
+    // $request->user() でログイン中のユーザーを取得
+}
+```
+
+汎用Requestで使える代表的なメソッド：
+
+| メソッド | 用途 |
+|---------|------|
+| `$request->input('name')` | 特定のフィールドを取得 |
+| `$request->all()` | 全入力値を配列で取得 |
+| `$request->only(['name', 'email'])` | 指定したものだけ取得 |
+| `$request->hasFile('file')` | ファイルがアップロードされたか確認 |
+| `$request->file('file')` | アップロードされたファイルを取得 |
+| `$request->user()` | ログイン中のユーザーを取得 |
+| `$request->ip()` | アクセス元IPアドレスを取得 |
+| `$request->url()` | アクセスされたURLを取得 |
+| `$request->method()` | HTTPメソッド（GET, POSTなど）を取得 |
+
+**パターン2: カスタム FormRequest**
+
+フォーム送信など、バリデーションが必要な場合に使う。`app/Http/Requests/` ディレクトリに自分でクラスを作成する。
+
+```php
+// app/Http/Requests/StoreTransferRequest.php
+class StoreTransferRequest extends FormRequest
+{
+    // このリクエストを許可するかどうか
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    // バリデーションルール
+    public function rules(): array
+    {
+        return [
+            'files' => ['required_without:file', 'array', 'min:1'],
+            'files.*' => ['required', 'file'],
+        ];
+    }
+
+    // エラーメッセージのカスタマイズ
+    public function messages(): array
+    {
+        return [
+            'files.required_without' => 'ファイルを選択してください',
+        ];
+    }
+}
+```
+
+Controllerでは型宣言でカスタムRequestを指定する。Controllerに到達した時点で、バリデーションは完了済みになる。
+
+```php
+use App\Http\Requests\StoreTransferRequest;
+
+public function store(StoreTransferRequest $request): RedirectResponse
+{
+    // ここに到達 = バリデーション成功済み
+    $request->file('files');  // 安心して値を取り出せる
+}
+```
+
+FormRequest生成コマンド：
+
+```
+php artisan make:request StoreTransferRequest
+```
+
+##### 使い分けの基準
+
+| 状況 | 使うクラス |
+|------|-----------|
+| フォーム送信を受け取る（バリデーションが必要） | カスタム FormRequest |
+| ダウンロード、API、情報取得のみ | `Illuminate\Http\Request`（汎用） |
+
+##### FormRequestを使う理由
+
+- **責任の分離**: Controller は「何をするか」、FormRequest は「何を受け取るか」
+- **Controllerの簡潔化**: バリデーションロジックを外に出すことでControllerがスッキリする
+- **再利用性**: 同じバリデーションルールを複数のControllerで使いまわせる
+
+##### 継承の構造
+
+```
+StoreTransferRequest（自分で作成）
+    ↓ extends
+FormRequest（Laravel提供 / authorize, rules, messagesなどを持つ）
+    ↓ extends
+Request（Laravel提供 / input, file, user, ipなどを持つ）
+    ↓ extends
+SymfonyRequest（Symfony提供 / HTTPリクエストの基盤）
+```
+
+自分で作るFormRequestは、これらの親クラスが持つメソッドを全て使うことができる。
+
+
+
 
 
 
