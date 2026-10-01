@@ -274,21 +274,255 @@ SymfonyRequest（Symfony提供 / HTTPリクエストの基盤）
 
 自分で作るFormRequestは、これらの親クラスが持つメソッドを全て使うことができる。
 
+---
 
+### ControllerからBladeへモデルが渡る仕組み
 
+#### 最初に結論
 
+Bladeが`Transfer`モデルを自動的に探しているわけではない。
 
+Controllerが`view()`の第2引数で`Transfer`オブジェクトを渡しているため、Blade内で`$transfer`として利用できる。
 
+```php
+public function show(Transfer $transfer): View
+{
+    return view('transfers.show', [
+        'transfer' => $transfer->load('files'),
+    ]);
+}
+```
 
+```blade
+{{ $transfer->status }}
+```
 
+対応関係は次のとおり。
 
+```text
+Controllerの配列キー                 Bladeの変数名
+'transfer' => $transfer        →     $transfer
+'message'  => $message         →     $message
+```
 
+`view('transfers.show', ...)`の`transfers.show`は、次のBladeファイルを示す。
 
+```text
+resources/views/transfers/show.blade.php
+```
 
+一方、配列の値に渡せるものは`app/Models`配下のモデルだけではない。文字列、数値、配列、Collection、自作クラスのオブジェクトなど、PHPで扱える値を渡せる。
 
+つまり、次の2つは別の話である。
 
+- `resources/views`：Bladeファイルを置く標準ディレクトリ
+- Bladeへ渡せるデータ：Controllerなどが`view()`へ渡したPHPの値
 
+モデルをどのディレクトリへ置いたかによって、Bladeで利用できるかどうかが決まるわけではない。
 
+#### リクエストから画面表示まで
 
+OneSendのTransfer詳細画面は、概ね次の順番で処理される。
 
+```text
+ブラウザ
+  ↓ GET /transfers/1
+Route
+  ↓ TransferController@showを選択
+ルートモデルバインディング
+  ↓ ID=1のTransferを取得
+Controller
+  ↓ filesを読み込み、view()へ渡す
+Blade
+  ↓ HTMLへ変換
+ブラウザ
+```
+
+ルートの`{transfer}`とController引数の`Transfer $transfer`が対応しているため、Laravelが対象モデルを検索する。
+
+```php
+Route::get('/transfers/{transfer}', [TransferController::class, 'show']);
+
+public function show(Transfer $transfer): View
+```
+
+この検索でモデルが見つからない場合は、Controllerの処理へ入る前に404になる。
+
+### Bladeは「HTMLに埋め込めるPHP」
+
+Bladeは独立したプログラミング言語ではなく、最終的にPHPへコンパイルされるテンプレートエンジンである。
+
+例えば、次のBlade構文は、
+
+```blade
+{{ $transfer->status }}
+```
+
+概念的には次のようなPHPへ変換される。
+
+```php
+<?php echo e($transfer->status); ?>
+```
+
+`e()`はHTMLエスケープを行う。ユーザー入力に`<script>`などが含まれていても、そのままHTMLとして実行されるのを防ぐ。
+
+主なBlade構文とPHPの対応は次のとおり。
+
+| Blade | 意味 |
+|---|---|
+| `{{ $value }}` | 値をエスケープして表示する |
+| `{!! $html !!}` | エスケープせず表示する。信頼できない値には使わない |
+| `@if ... @elseif ... @else @endif` | PHPの条件分岐 |
+| `@foreach ... @endforeach` | PHPの繰り返し |
+| `@csrf` | CSRF対策用のhidden inputを生成する |
+| `@method('PATCH')` | HTMLフォームのPOSTをLaravel上でPATCHとして扱う |
+| `<x-primary-button>` | Bladeコンポーネントを呼び出す |
+
+### OneSendの公開状態表示を読み解く
+
+```blade
+@if ($transfer->expires_at && $transfer->expires_at->lte(now()))
+    <p>公開期限が終了しています。</p>
+@elseif ($transfer->status === \App\Models\Transfer::STATUS_ACTIVE)
+    {{-- 公開停止フォーム --}}
+@else
+    {{-- 再公開フォーム --}}
+@endif
+```
+
+上から順番に判定する。
+
+1. `expires_at`が存在し、現在時刻以前なら「期限切れ」を表示する。
+2. 期限内で`status`が`active`なら「公開を停止」ボタンを表示する。
+3. それ以外、つまり停止中なら「再公開」ボタンを表示する。
+
+`Transfer::STATUS_ACTIVE`はモデルに定義された定数である。
+
+```php
+public const STATUS_ACTIVE = 'active';
+```
+
+文字列`'active'`を複数箇所へ直接書くより、タイプミスを減らし、意味を明確にできる。
+
+### 属性とリレーションをBladeから参照する
+
+```blade
+{{ $transfer->status }}
+
+@foreach ($transfer->files as $file)
+    {{ $file->file_name }}
+@endforeach
+```
+
+- `$transfer->status`：`transfers.status`カラムに対応する属性
+- `$transfer->files`：`Transfer::files()`で定義したリレーションの取得結果
+- `$file->file_name`：`transfer_files.file_name`カラムに対応する属性
+
+EloquentモデルはPHPのマジックメソッドを利用して、DBカラムやリレーションをプロパティのように参照できるようにしている。
+
+ただし、ViewでDB問い合わせを組み立てるのは避ける。Controllerで`load('files')`などを使って必要なデータを準備し、Bladeは表示の分岐に集中させる。
+
+### Controllerで登場したメソッドと関数
+
+#### `abort_unless()`
+
+```php
+abort_unless($transfer->user_id === auth()->id(), 403);
+```
+
+Laravelのグローバルヘルパー関数で、「条件がtrueでなければ処理を中断する」という意味。
+
+```text
+条件がtrue  → 次の処理へ進む
+条件がfalse → 指定されたHTTPエラーを返す
+```
+
+この例では、Transferの所有者でない場合に403 Forbiddenを返す。
+
+似た関数に`abort_if()`がある。
+
+```php
+abort_if($user->isBlocked(), 403);       // 条件がtrueなら中断
+abort_unless($user->isOwner(), 403);     // 条件がfalseなら中断
+```
+
+#### `unavailableResponse()`
+
+```php
+private function unavailableResponse(string $message, int $status): Response
+```
+
+これはLaravel標準メソッドではなく、OneSendの`TransferController`内で定義した独自メソッドである。
+
+```php
+return $this->unavailableResponse('公開期限が終了しています。', 410);
+```
+
+`$this->`が付いているため、「現在のControllerオブジェクトが持つメソッドを呼ぶ」と読める。定義元が分からない場合は、まず同じクラス内をメソッド名で検索する。
+
+#### `response()->view()`
+
+```php
+return response()->view(
+    'transfers.unavailable',
+    ['message' => $message],
+    $status,
+);
+```
+
+BladeをHTMLへ変換しつつ、HTTPステータスコードも指定してResponseを作る。
+
+通常の`view()`は画面テンプレートを返す。`response()->view()`は「画面の内容に加えて403や410などのHTTP情報も明示したい」ときに使う。
+
+#### `Storage::disk('local')`
+
+```php
+Storage::disk('local')->exists($file->file_path);
+Storage::disk('local')->download($file->file_path, $file->file_name);
+```
+
+`Storage`はLaravelのFacadeで、ファイル保存先を同じAPIで扱うための窓口である。
+
+`disk('local')`は`config/filesystems.php`の`local`設定を選択する。OneSendでは次の場所がルートになっている。
+
+```text
+storage/app/private
+```
+
+ファイルパスを直接組み立てず、Storageを介することで、将来S3などへ保存先を変えてもアプリ側の呼び出し方を揃えやすくなる。
+
+### DBトランザクションとファイル保存の違い
+
+```php
+$transfer = DB::transaction(function () {
+    // DBへの登録処理
+});
+```
+
+トランザクションは、複数のDB操作を一つのまとまりとして扱う。
+
+- クロージャが正常終了：commitして変更を確定する
+- 例外が発生：rollbackしてDB変更を取り消す
+- クロージャの`return`：`DB::transaction()`全体の戻り値になる
+
+ただし、DBトランザクションが取り消せるのはDB操作だけである。Storageへ保存した実ファイルは自動では削除されない。
+
+そのためOneSendのアップロード処理では、DB登録に失敗したとき、`catch`内で保存済みファイルを明示的に削除している。
+
+### 未知のLaravelコードを読む手順
+
+未知のメソッドを見つけたら、次の順番で調べる。
+
+1. 左側の値を確認する。`$transfer->`、`Transfer::`、`Storage::`では探す場所が異なる。
+2. 同じクラス内に独自メソッドがないか検索する。
+3. 型宣言やIDE補完から、オブジェクトのクラスを確認する。
+4. Laravel公式ドキュメントで引数、戻り値、例外、副作用を確認する。
+5. 必要なら`vendor/laravel/framework/src`から実装を確認する。
+
+#### 公式ドキュメント
+
+- [Laravel 13.x Views](https://laravel.com/framework/docs/13.x/views)
+- [Laravel 13.x Blade Templates](https://laravel.com/framework/docs/13.x/blade)
+- [Laravel 13.x Controllers](https://laravel.com/framework/docs/13.x/controllers)
+- [Laravel 13.x File Storage](https://laravel.com/framework/docs/13.x/filesystem)
 

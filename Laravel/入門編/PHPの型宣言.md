@@ -90,8 +90,12 @@ function ($transfers) use ($disk, &$deletedCount): void {
 戻り値だけでなく、引数にも型を指定できる。
 
 ```php
-public function download(Request $request, string $token, int $fileId): StreamedResponse
-//                       ↑ Requestオブジェクト ↑ 文字列     ↑ 整数
+public function download(
+    Request $request,
+    string $token,
+    int $fileId,
+): StreamedResponse|Response
+// ↑ 引数の型                              ↑ 戻り値は2種類のどちらか
 ```
 
 これにより、「$token には文字列が来る」「$fileId には整数が来る」ことが保証される。
@@ -127,3 +131,138 @@ public function store(...): RedirectResponse
 - 型宣言は書かなくてもPHPは動作する。しかし、Laravelのコードでは書くのが標準的な作法になっている。
 - `?` を型の前につけると null も許容される（例: `?string` は「文字列 or null」）
 - PHP 8.0以降では `string|int` のように複数の型を許容する **Union型** も使える
+
+---
+
+### OneSendで使われているUnion型
+
+Union型は、「複数の型のうち、いずれかを返す」と宣言する記法である。
+
+```php
+public function share(string $token): View|Response
+```
+
+このメソッドは状況によって戻り値が変わる。
+
+```text
+公開可能   → View
+期限切れ   → Response（410）
+公開停止中 → Response（403）
+```
+
+ダウンロードも同様である。
+
+```php
+public function download(
+    Request $request,
+    string $token,
+    int $fileId,
+): StreamedResponse|Response
+```
+
+```text
+ダウンロード可能 → StreamedResponse
+利用不可         → Response
+```
+
+型宣言によって、メソッドを読む人は「常にファイルが返るわけではない」と中身を読む前に分かる。
+
+### nullable型とnull安全演算子は別物
+
+#### nullable型`?Response`
+
+```php
+private function unavailableTransferResponse(Transfer $transfer): ?Response
+```
+
+戻り値の`?Response`は次のUnion型と同じ意味である。
+
+```php
+Response|null
+```
+
+```text
+利用不可 → Responseを返す
+利用可能 → nullを返す
+```
+
+これは「型宣言」の話である。
+
+#### null安全演算子`?->`
+
+```php
+$transfer->expires_at?->lte(now())
+```
+
+こちらの`?->`は、PHPのnull安全演算子である。
+
+概念的には次の条件分岐を短く書いている。
+
+```php
+if ($transfer->expires_at === null) {
+    return null;
+}
+
+return $transfer->expires_at->lte(now());
+```
+
+`expires_at`が`null`なら、`lte()`を呼ばずに式全体が`null`になる。値が存在すれば`lte()`を呼ぶ。
+
+```text
+?Response  → nullを返してよいという型宣言
+?->        → nullなら後続メソッドを呼ばない演算子
+```
+
+### `expires_at`で`lte()`を呼べる理由
+
+Transferモデルにはcastが定義されている。
+
+```php
+protected function casts(): array
+{
+    return [
+        'expires_at' => 'datetime',
+    ];
+}
+```
+
+このcastにより、DB上の日付文字列がPHPではCarbon日時オブジェクトとして扱われる。
+
+そのため、次のメソッドを呼べる。
+
+```php
+$transfer->expires_at->lte(now())
+```
+
+- `now()`：現在日時のCarbonオブジェクトを作るLaravelヘルパー
+- `lte()`：less than or equal、つまり「引数の日時以下か」を判定する
+
+公開期限の例では次の意味になる。
+
+```text
+expires_at <= 現在日時
+```
+
+つまり「公開期限が現在時刻以前なら期限切れ」である。
+
+### 型を手掛かりにコードを読む
+
+不明なメソッドを見つけたら、最初に左側の値の型を確認する。
+
+```php
+$transfer->expires_at?->lte(now());
+```
+
+1. `$transfer`は`Transfer`モデル。
+2. `expires_at`はcastによってCarbonまたは`null`。
+3. `lte()`はLaravel ControllerのメソッドではなくCarbonのメソッド。
+4. 結果は`bool`または`null`。
+
+メソッド名だけを検索するより、「どの型が持つメソッドか」を確認すると定義元を見つけやすい。
+
+#### 公式マニュアル
+
+- [PHP 型宣言](https://www.php.net/manual/ja/language.types.declarations.php)
+- [PHP Union型](https://www.php.net/manual/ja/language.types.type-system.php#language.types.type-system.composite.union)
+- [PHP null安全演算子](https://www.php.net/manual/ja/language.oop5.basic.php#language.oop5.basic.nullsafe)
+- [Laravel 13.x Eloquent Casts](https://laravel.com/framework/docs/13.x/eloquent-mutators#date-casting)
